@@ -3,8 +3,9 @@
     "version"       : "0.6.2",
     "description"   : "Node-RED nodes to talk to NIOT-E-NPIX-RS485 module serial ports",
     "dependencies"  : {
-        "serialport"   : "^6.0.4",
-        "rpi-gpio": "~0.8.1"
+        "serialport" : "^6.0.4",
+        "rpi-gpio" : "~0.8.1",
+        "locks" : "0.2.2"
     },
     "repository" : {
         "type":"git",
