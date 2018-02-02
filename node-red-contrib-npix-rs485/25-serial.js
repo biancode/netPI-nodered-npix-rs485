@@ -7,6 +7,7 @@ It was modified to work with NIOT-E-NPIX-RS458 extension module made for netPI
 
 Modifications:
 * include 'rpi-gpio' module additionally to get control of GPIO pins
+* include 'locks' module for mutex support
 * setting TX enable pin (GPIO 17) to state high before sending data
 * added port.drain() function to wait for empty TX buffer 
 * setting TX enable pin to stat low after data has been sent
@@ -16,9 +17,14 @@ Modifications:
 module.exports = function(RED) {
     "use strict";
 
-    // !!!!!Modification!!!!!! Get access to GPIO interface
+    // !!!!!Modification!!!!!! 
+	// Get access to GPIO interface
     var gpio = require('rpi-gpio');
     
+	// need a mutex
+	var locks = require('locks');
+	var mutex = locks.createMutex();
+	 
     var fs = require('fs');
 
     var settings = RED.settings;
@@ -59,12 +65,14 @@ module.exports = function(RED) {
             if (node.serialConfig.addchar == "true" || node.serialConfig.addchar === true) {
                 node.addCh = this.serialConfig.newline.replace("\\n","\n").replace("\\r","\r").replace("\\t","\t").replace("\\e","\e").replace("\\f","\f").replace("\\0","\0"); // jshint ignore:line
             }
-            // take control of GPIO 17 
+	
+  	        // take control of GPIO 17 
             gpio.setup(11, gpio.DIR_LOW, function (err) {
                 if (err) {
                     RED.log.warn(" Setting GPIO 17 to output failed");
                 } else {
                     node.on("input",function(msg) {
+					
                         if (msg.hasOwnProperty("payload")) {
                             var payload = msg.payload;
                             if (!Buffer.isBuffer(payload)) {
@@ -80,21 +88,28 @@ module.exports = function(RED) {
                                 payload = Buffer.concat([payload,new Buffer(node.addCh)]);
                             }
 
-                            // !!!!Modification !!!!! set RS485 TX enable to high first, then send
-                            gpio.write(11, true, function(err) {
-                                node.port.write(payload,function(err,res) {
-                                    if (err) {
-                                        var errmsg = err.toString().replace("Serialport","Serialport "+node.port.serial.path);
-                                        node.error(errmsg,msg);
-                                    } else {
-                                       // !!!!!Modification!!!! Wait till all data has been transmitted
-                                       node.port.drain(function(err) {
-                                           // set RS485 TX enable to low
-                                           gpio.write(11, false);
-                                       });
-                                    }
-                                });
-                            });
+							// !!!!Modification !!!!! get Mutex, set RS485 TX enable to high first, then send
+							mutex.lock(function () {
+								gpio.write(11, true, function(err) {
+									node.port.write(payload,function(err,res) {
+										if (err) {
+											var errmsg = err.toString().replace("Serialport","Serialport "+node.port.serial.path);
+											node.error(errmsg,msg);
+											mutex.unlock();
+										} else {
+										   // !!!!!Modification!!!! Wait till all data has been transmitted
+										   node.port.drain(function(err) {
+											   // set RS485 TX enable to low
+											   gpio.write(11, false, function(err){
+      											 // unlock mutex  
+								                 mutex.unlock();			   
+											   });
+										   });
+										}
+									});
+								});
+							  
+							});
                         }
                     });
                     node.port.on('ready', function() {
@@ -152,58 +167,64 @@ module.exports = function(RED) {
             }
 
             this.port.on('data', function(msg) {
-                // single char buffer
-                if ((node.serialConfig.newline === 0)||(node.serialConfig.newline === "")) {
-                    if (node.serialConfig.bin !== "bin") { node.send({"payload": String.fromCharCode(msg)}); }
-                    else { node.send({"payload": new Buffer([msg])}); }
-                }
-                else {
-                    // do the timer thing
-                    if (node.serialConfig.out === "time") {
-                        if (node.tout) {
-                            i += 1;
-                            buf[i] = msg;
-                        }
-                        else {
-                            node.tout = setTimeout(function () {
-                                node.tout = null;
-                                var m = new Buffer(i+1);
-                                buf.copy(m,0,0,i+1);
-                                if (node.serialConfig.bin !== "bin") { m = m.toString(); }
-                                node.send({"payload": m});
-                                m = null;
-                            }, node.serialConfig.newline);
-                            i = 0;
-                            buf[0] = msg;
-                        }
-                    }
-                    // count bytes into a buffer...
-                    else if (node.serialConfig.out === "count") {
-                        buf[i] = msg;
-                        i += 1;
-                        if ( i >= parseInt(node.serialConfig.newline)) {
-                            var m = new Buffer(i);
-                            buf.copy(m,0,0,i);
-                            if (node.serialConfig.bin !== "bin") { m = m.toString(); }
-                            node.send({"payload":m});
-                            m = null;
-                            i = 0;
-                        }
-                    }
-                    // look to match char...
-                    else if (node.serialConfig.out === "char") {
-                        buf[i] = msg;
-                        i += 1;
-                        if ((msg === splitc[0]) || (i === bufMaxSize)) {
-                            var n = new Buffer(i);
-                            buf.copy(n,0,0,i);
-                            if (node.serialConfig.bin !== "bin") { n = n.toString(); }
-                            node.send({"payload":n});
-                            n = null;
-                            i = 0;
-                        }
-                    }
-                }
+                
+				mutex.lock(function () {
+					
+					// single char buffer
+					if ((node.serialConfig.newline === 0)||(node.serialConfig.newline === "")) {
+						if (node.serialConfig.bin !== "bin") { node.send({"payload": String.fromCharCode(msg)}); }
+						else { node.send({"payload": new Buffer([msg])}); }
+					}
+					else {
+						// do the timer thing
+						if (node.serialConfig.out === "time") {
+							if (node.tout) {
+								i += 1;
+								buf[i] = msg;
+							}
+							else {
+								node.tout = setTimeout(function () {
+									node.tout = null;
+									var m = new Buffer(i+1);
+									buf.copy(m,0,0,i+1);
+									if (node.serialConfig.bin !== "bin") { m = m.toString(); }
+									node.send({"payload": m});
+									m = null;
+								}, node.serialConfig.newline);
+								i = 0;
+								buf[0] = msg;
+							}
+						}
+						// count bytes into a buffer...
+						else if (node.serialConfig.out === "count") {
+							buf[i] = msg;
+							i += 1;
+							if ( i >= parseInt(node.serialConfig.newline)) {
+								var m = new Buffer(i);
+								buf.copy(m,0,0,i);
+								if (node.serialConfig.bin !== "bin") { m = m.toString(); }
+								node.send({"payload":m});
+								m = null;
+								i = 0;
+							}
+						}
+						// look to match char...
+						else if (node.serialConfig.out === "char") {
+							buf[i] = msg;
+							i += 1;
+							if ((msg === splitc[0]) || (i === bufMaxSize)) {
+								var n = new Buffer(i);
+								buf.copy(n,0,0,i);
+								if (node.serialConfig.bin !== "bin") { n = n.toString(); }
+								node.send({"payload":n});
+								n = null;
+								i = 0;
+							}
+						}
+					}
+					// unlock mutex  
+					mutex.unlock();			   
+				});
             });
             this.port.on('ready', function() {
                 node.status({fill:"green",shape:"dot",text:"node-red:common.status.connected"});
