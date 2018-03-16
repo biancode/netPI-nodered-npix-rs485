@@ -68,10 +68,18 @@ Modifications:
 </script>
 
 <script type="text/x-red" data-help-name="serial out npix rs485">
-    <p>Provides a connection to an outbound serial port.</p>
+    <p>Provides a connection to an outbound RS485 serial port.</p>
     <p>Only the <code>msg.payload</code> is sent.</p>
     <p>Optionally the new line character used to split the input can be appended to every message sent out to the serial port.</p>
     <p>Binary payloads can be sent by using a Buffer object.</p>
+    <p></p>
+    
+    <p>Switching between the rs485 interface's transmit/receive mode is done across a GPIO signal.</p>
+    <p>Controling the GPIO is done all in software causing a remarkable jitter.</p>
+    <p>An oscilloscope showed that the GPIO is set to high state (transmit mode) 400usec up to 1ms before the data starts to be transmitted to the line.</p>
+    <p>The GPIO falls back to low state (receive mode) 5ms to 32ms after the last bit has been shifted out of the transmit shift register.</p> 
+    <p>Please consider that only after this inhibit time period the module is able to receive data again.</p>
+    <p>Fast devices (<32ms) sending back data in a request/response manner might not work with the rs485 nodes.</p>
 </script>
 
 <script type="text/javascript">
