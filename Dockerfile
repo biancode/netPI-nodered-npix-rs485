@@ -46,8 +46,8 @@ RUN apt-get update  \
 #set the entrypoint
 ENTRYPOINT ["/etc/init.d/entrypoint.sh"]
 
-#Node-RED Port
-EXPOSE 1880 22 502 10502 11502
+#SSH, Modbus, Node-RED and the Node-RED Modbus server/flex server default Ports 
+EXPOSE 22 502 1880 10502 11502
 
 #set STOPSGINAL
 STOPSIGNAL SIGTERM
