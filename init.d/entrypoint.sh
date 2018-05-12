@@ -12,6 +12,9 @@ term_handler() {
 # on callback, stop all started processes in term_handler
 trap 'kill ${!}; term_handler' SIGINT SIGKILL SIGTERM SIGQUIT SIGTSTP SIGSTOP SIGHUP
 
+#start SSH as service
+/usr/sbin/sshd -D
+
 # run applications in the background
 /etc/init.d/nodered.sh start & 
 
