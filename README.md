@@ -38,9 +38,15 @@ STEP 2. Click the Docker tile to open the [Portainer.io](http://portainer.io/) D
 
 STEP 3. Enter the following parameters under **Containers > Add Container**
 
-* **Image**: `hilschernetpi/netpi-nodered-npix-rs485`
+* **based on Image**: `hilschernetpi/netpi-nodered-npix-rs485`
 
-* **Port mapping**: `Host "1880" (any unused one) -> Container "1880"` 
+* **Image**: `biancoroyal/biancode/netpi-nodered-npix-rs485-biancode`
+
+* **Port mapping SSH**: `Host "22" (any unused one) -> Container "22"` 
+* **Port mapping Modbus**: `Host "502" (any unused one) -> Container "502"` 
+* **Port mapping Node-RED**: `Host "1880" (any unused one) -> Container "1880"` 
+* **Port mapping Modbus server**: `Host "10502" (any unused one) -> Container "10502"` 
+* **Port mapping Modbus Flex server**: `Host "11502" (any unused one) -> Container "11502"` 
 
 * **Restart policy"** : `always`
 
@@ -55,6 +61,14 @@ Pulling the image from Docker Hub may take up to 5 minutes.
 #### Accessing
 
 After starting the container open Node-RED in your browser with `http://<netpi's ip address>:<mapped host port>` e.g. `http://192.168.0.1:1880`. Two nodes *serial rs485 (in/out)* in the nodes *npix* library palette provides you access to the RS485 interface of the NPIX module. The nodes' info tab in Node-RED explains how to use them.
+
+##### SSH
+
+The container starts the SSH service automatically.
+
+Login to it with an SSH client such as [putty](http://www.putty.org/) using netPI's IP address at your mapped port. Use the credentials `root` as user and `root` as password when asked and you are logged in as root user `root`.
+
+Use debian commands as usual.
 
 #### Tags
 
