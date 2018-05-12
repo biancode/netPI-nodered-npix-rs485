@@ -1,26 +1,26 @@
 #use latest armv7hf compatible debian OS version from group resin.io as base image
-FROM resin/armv7hf-debian:jessie
+FROM resin/armv7hf-debian:stretch
 
 #enable building ARM container on x86 machinery on the web (comment out next line if built on Raspberry) 
 RUN [ "cross-build-start" ]
 
 #labeling
-LABEL maintainer="netpi@hilscher.com" \ 
-      version="V0.9.2" \
-      description="Node-RED with rs485 nodes to communicate to NIOT-E-NPIX-RS485 extension module"
+LABEL maintainer="klaus.landsdorf@bianco-royal.de" \ 
+      version="V0.10.0" \
+      description="Node-RED with Modbus, OPC UA and RS485 nodes to communicate to NIOT-E-NPIX-RS485 extension module"
 
 #version
-ENV HILSCHERNETPI_NODERED_NPIX_RS485_VERSION 0.9.2
+ENV HILSCHERNETPI_NODERED_NPIX_RS485_BIANCODE_VERSION 0.10.0
 
 #copy files
 COPY "./init.d/*" /etc/init.d/ 
-COPY "./node-red-contrib-npix-rs485/*" "./node-red-contrib-npix-rs485/locales/en-US/*" /tmp/
+COPY "./node-red-contrib-npix-rs485-biancode/*" "./node-red-contrib-npix-rs485-biancode/locales/en-US/*" /tmp/
 
 #do installation
 RUN apt-get update  \
     && apt-get install curl build-essential \
-#install node.js
-    && curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -  \
+#install node.js v8 LTS
+    && curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -  \
     && apt-get install -y nodejs  \
 #install Node-RED
     && npm install -g --unsafe-perm node-red \
@@ -41,7 +41,7 @@ RUN apt-get update  \
 ENTRYPOINT ["/etc/init.d/entrypoint.sh"]
 
 #Node-RED Port
-EXPOSE 1880
+EXPOSE 1880 22 502 10502 11502
 
 #set STOPSGINAL
 STOPSIGNAL SIGTERM
