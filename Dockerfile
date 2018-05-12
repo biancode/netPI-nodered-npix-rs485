@@ -10,7 +10,7 @@ LABEL maintainer="klaus.landsdorf@bianco-royal.de" \
       description="Node-RED with Modbus, OPC UA and RS485 nodes to communicate to NIOT-E-NPIX-RS485 extension module"
 
 #version
-ENV HILSCHERNETPI_NODERED_NPIX_RS485_BIANCODE_VERSION 0.10.0
+ENV HILSCHERNETPI_NODERED_NPIX_RS485_VERSION 0.10.0
 
 #copy files
 COPY "./init.d/*" /etc/init.d/ 
