@@ -6,7 +6,7 @@ Made for [netPI](https://www.netiot.com/netpi/), the Open Edge Connectivity Ecos
 
 The image provided hereunder deploys a container with installed Debian, Node-RED and rs485 nodes to communicate with an extension module NIOT-E-NPIX-RS485.
 
-Base of this image builds the latest version of [debian:jessie](https://hub.docker.com/r/resin/armv7hf-debian/tags/) with installed Internet of Things flow-based programming web-tool [Node-RED](https://nodered.org/) and two extra nodes *serial rs485 (in/out)* providing access to the RS485 serial port of the module NIOT-E-NPIX-RS485. The nodes communicate to the module across a serial connection over device `/dev/ttyS0`.
+Base of this image builds the latest version of [debian:stretch](https://hub.docker.com/r/resin/armv7hf-debian/tags/) with installed Internet of Things flow-based programming web-tool [Node-RED](https://nodered.org/) and two extra nodes *serial rs485 (in/out)* providing access to the RS485 serial port of the module NIOT-E-NPIX-RS485. The nodes communicate to the module across a serial connection over device `/dev/ttyS0`.
 
 ATTENTION! Never plug or unplug any extension module if netPI is powered. Make sure a module is already inserted before applying 24VDC to netPI. 
 
@@ -38,9 +38,8 @@ STEP 2. Click the Docker tile to open the [Portainer.io](http://portainer.io/) D
 
 STEP 3. Enter the following parameters under **Containers > Add Container**
 
-* **based on Image**: `hilschernetpi/netpi-nodered-npix-rs485`
-
-* **Image**: `biancoroyal/biancode/netpi-nodered-npix-rs485-biancode`
+<!-- * **based on Image**: `hilschernetpi/netpi-nodered-npix-rs485` -->
+* **Image**: `biancoroyal/biancode/netpi-nodered-npix-rs485`
 
 * **Port mapping SSH**: `Host "22" (any unused one) -> Container "22"` 
 * **Port mapping Modbus**: `Host "502" (any unused one) -> Container "502"` 
