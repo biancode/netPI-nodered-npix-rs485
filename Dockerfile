@@ -19,6 +19,12 @@ COPY "./node-red-contrib-npix-rs485-biancode/*" "./node-red-contrib-npix-rs485-b
 #do installation
 RUN apt-get update  \
     && apt-get install curl build-essential \
+    && apt-get install -y openssh-server \
+    && echo 'root:root' | chpasswd \
+    && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd \
+    && mkdir /var/run/sshd \
+    # && sed -i -e 's;Port 22;Port 23;' /etc/ssh/sshd_config \ #Comment in if other SSH port (22->23) is needed 
 #install node.js v8 LTS
     && curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -  \
     && apt-get install -y nodejs  \
